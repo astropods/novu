@@ -2,6 +2,11 @@ name: Build self-hosted images
 
 on:
   workflow_dispatch:
+    inputs:
+      push:
+        description: Push the images to GHCR
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -71,6 +76,7 @@ jobs:
           fi
 
       - name: Push
+        if: inputs.push
         env:
           SERVICE: ${{ matrix.service }}
         run: |

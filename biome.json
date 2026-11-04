@@ -20,7 +20,6 @@
       "!**/*.generated.ts",
       "!**/pnpm-lock.yaml",
       "!**/swagger-spec.json",
-      "!playground",
       "!libs/internal-sdk",
       "!.github",
       "!scripts",

@@ -45,8 +45,6 @@
         "projects": [
           "@novu/api-service",
           "@novu/dashboard",
-          "@novu/inbound-mail",
-          "@novu/webhook",
           "@novu/worker",
           "@novu/ws"
         ],

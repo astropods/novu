@@ -8,8 +8,6 @@ packages:
   # all packages in enterprise modules
   - 'enterprise/packages/*'
   - 'enterprise/workers/step-resolver'
-  # playground apps
-  - 'playground/*'
 
 # Pnpm configuration
 # Wait 3 days (4320 minutes) before allowing packages to be installed
