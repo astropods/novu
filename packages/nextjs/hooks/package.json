@@ -1,5 +1,0 @@
-{
-  "main": "../dist/cjs/hooks/index.js",
-  "module": "../dist/esm/hooks/index.js",
-  "types": "../dist/types/hooks/index.d.ts"
-}

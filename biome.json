@@ -26,8 +26,7 @@
       "!packages/framework/scripts",
       "!packages/framework/src/jsonSchemaFaker.js",
       "!libs/maily-tsconfig/*",
-      "!libs/maily-tailwind-config/*",
-      "!packages/add-inbox/vitest.config.js"
+      "!libs/maily-tailwind-config/*"
     ]
   },
   "formatter": {
