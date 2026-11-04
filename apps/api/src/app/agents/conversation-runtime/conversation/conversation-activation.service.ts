@@ -209,55 +209,9 @@ export class ConversationActivationService {
     return calendar;
   }
 
-  /**
-   * Reads the current Stripe billing period via the optional EE billing use
-   * case. Returns `null` (caller falls back per the sticky rules) when the
-   * billing module is absent, the subscription has no period, or anything fails.
-   * Isolated so it can be stubbed in tests with dummy period data.
-   */
-  protected async fetchStripeBillingPeriod(organizationId: string): Promise<BillingPeriod | null> {
-    try {
-      const billing = this.loadEeBilling();
-      if (!billing?.GetSubscription || !billing?.GetSubscriptionCommand) {
-        return null;
-      }
-
-      const getSubscription = this.moduleRef.get(billing.GetSubscription, { strict: false });
-      if (!getSubscription) {
-        return null;
-      }
-
-      const subscription = await getSubscription.execute(billing.GetSubscriptionCommand.create({ organizationId }));
-      if (!subscription?.currentPeriodStart || !subscription?.currentPeriodEnd) {
-        return null;
-      }
-
-      const periodStart = new Date(subscription.currentPeriodStart);
-      const periodEnd = new Date(subscription.currentPeriodEnd);
-
-      // Key on the Stripe period start so two periods starting in the same UTC month
-      // (plan change, trial conversion, cycle reset, short custom cycle) never collide
-      // and overcount. Transient-failure protection comes from the sticky cache fallback
-      // in `resolveBillingPeriod`, not from month-anchoring this key.
-      return { periodKey: `stripe:${periodStart.toISOString()}`, periodStart, periodEnd };
-    } catch (err) {
-      this.logger.warn(
-        { err: err instanceof Error ? err.message : String(err), organizationId },
-        'Failed to resolve Stripe billing period; falling back per sticky rules'
-      );
-
-      return null;
-    }
-  }
-
-  // biome-ignore lint/suspicious/noExplicitAny: optional EE module surface is untyped in OSS builds
-  private loadEeBilling(): any {
-    try {
-      // biome-ignore lint/style/noCommonJs: dynamic require keeps @novu/ee-billing optional for OSS builds
-      return require('@novu/ee-billing');
-    } catch {
-      return null;
-    }
+  /** Stripe billing ships only in Novu's enterprise build, so callers fall back per the sticky rules. Stubbed in tests. */
+  protected async fetchStripeBillingPeriod(_organizationId: string): Promise<BillingPeriod | null> {
+    return null;
   }
 
   private setPeriodCache(organizationId: string, value: BillingPeriod, now: Date): void {

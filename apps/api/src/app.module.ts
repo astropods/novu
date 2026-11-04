@@ -41,7 +41,6 @@ import { MessagesModule } from './app/messages/messages.module';
 import { NotificationGroupsModule } from './app/notification-groups/notification-groups.module';
 import { NotificationModule } from './app/notifications/notification.module';
 import { OrganizationModule } from './app/organization/organization.module';
-import { OutboundWebhooksModule } from './app/outbound-webhooks/outbound-webhooks.module';
 import { PartnerIntegrationsModule } from './app/partner-integrations/partner-integrations.module';
 import { PreferencesModule } from './app/preferences';
 import { ApiRateLimitInterceptor } from './app/rate-limiting/guards';
@@ -55,7 +54,6 @@ import { StepResolversModule } from './app/step-resolvers/step-resolvers.module'
 import { StorageModule } from './app/storage/storage.module';
 import { SubscribersV1Module } from './app/subscribers/subscribersV1.module';
 import { SubscribersModule } from './app/subscribers-v2/subscribers.module';
-import { SupportModule } from './app/support/support.module';
 import { TenantModule } from './app/tenant/tenant.module';
 import { TestingModule } from './app/testing/testing.module';
 import { TopicsV1Module } from './app/topics-v1/topics-v1.module';
@@ -66,57 +64,6 @@ import { WidgetsModule } from './app/widgets/widgets.module';
 import { WorkflowOverridesModule } from './app/workflow-overrides/workflow-overrides.module';
 import { WorkflowModuleV1 } from './app/workflows-v1/workflow-v1.module';
 import { WorkflowModule } from './app/workflows-v2/workflow.module';
-
-const enterpriseImports = (): Array<Type | DynamicModule | Promise<DynamicModule> | ForwardReference> => {
-  const modules: Array<Type | DynamicModule | Promise<DynamicModule> | ForwardReference> = [];
-  if (process.env.NOVU_ENTERPRISE === 'true' || process.env.CI_EE_TEST === 'true') {
-    if (require('@novu/ee-translation')?.EnterpriseTranslationModule) {
-      modules.push(require('@novu/ee-translation')?.EnterpriseTranslationModule);
-      modules.push(require('@novu/ee-translation')?.TranslationModule);
-    }
-
-    if (require('@novu/ee-billing')?.BillingModule) {
-      modules.push(require('@novu/ee-billing')?.BillingModule.forRoot());
-    }
-
-    if (require('@novu/ee-api')?.InboundWebhooksModule) {
-      modules.push(require('@novu/ee-api')?.InboundWebhooksModule);
-    }
-
-    if (require('@novu/ee-ai')?.AiModule) {
-      modules.push(require('@novu/ee-ai')?.AiModule);
-    }
-
-    // LLM Gateway controllers parked for this PR — keeping the code so we
-    // can re-enable later by uncommenting this block.
-    // if (require('@novu/ee-ai')?.LlmGatewayModule) {
-    //   modules.push(require('@novu/ee-ai')?.LlmGatewayModule);
-    // }
-
-    if (require('@novu/ee-api')?.ConversationsModule) {
-      modules.push({
-        module: class ConversationsModuleHost {},
-        imports: [SharedModule, require('@novu/ee-api').ConversationsModule],
-      });
-    }
-
-    modules.push(SupportModule);
-    modules.push(OutboundWebhooksModule.forRoot());
-  }
-
-  return modules;
-};
-
-const enterpriseQuotaThrottlerInterceptor =
-  (process.env.NOVU_ENTERPRISE === 'true' || process.env.CI_EE_TEST === 'true') &&
-  require('@novu/ee-billing')?.QuotaThrottlerInterceptor
-    ? [
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: require('@novu/ee-billing')?.QuotaThrottlerInterceptor,
-        },
-      ]
-    : [];
 
 const baseModules: Array<Type | DynamicModule | Promise<DynamicModule> | ForwardReference> = [
   AuthModule,
@@ -169,8 +116,6 @@ const baseModules: Array<Type | DynamicModule | Promise<DynamicModule> | Forward
   WellKnownModule,
 ];
 
-const enterpriseModules = enterpriseImports();
-
 if (!isClerkEnabled()) {
   const communityModules = [InvitesModule];
   baseModules.push(...communityModules);
@@ -178,7 +123,7 @@ if (!isClerkEnabled()) {
   baseModules.push(PartnerIntegrationsModule);
 }
 
-const modules = baseModules.concat(enterpriseModules);
+const modules = baseModules;
 
 const providers: Provider[] = [
   {
@@ -193,7 +138,6 @@ const providers: Provider[] = [
     provide: APP_INTERCEPTOR,
     useClass: ProductFeatureInterceptor,
   },
-  ...enterpriseQuotaThrottlerInterceptor,
   {
     provide: APP_INTERCEPTOR,
     useClass: IdempotencyInterceptor,

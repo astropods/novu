@@ -26,9 +26,7 @@ export class GenerateManagedAgentCommand extends BaseCommand {
   runtime?: AgentRuntime;
 
   /**
-   * Request-scoped abort signal. Currently used only to report accurate `isAborted`
-   * analytics — `@novu/ee-ai`'s `LlmService.generateObject` does not yet accept a
-   * signal, so the LLM call itself is not cancelled when the client disconnects.
+   * Request-scoped abort signal.
    *
    * Intentionally undecorated: any class-validator/class-transformer decorator would
    * cause TypeScript to emit `design:type = AbortSignal`, and `BaseCommand.create`

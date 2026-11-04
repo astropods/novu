@@ -105,8 +105,6 @@ export class DeleteWorkflowUseCase {
         })
       );
 
-      await this.deleteTranslationGroup(command, session);
-
       await this.notificationTemplateRepository.delete({
         _id: workflow._id,
         _organizationId: command.organizationId,
@@ -118,38 +116,6 @@ export class DeleteWorkflowUseCase {
       await deleteOps(command.session);
     } else {
       await this.notificationTemplateRepository.withTransaction(deleteOps);
-    }
-  }
-
-  private async deleteTranslationGroup(command: DeleteWorkflowCommand, session: ClientSession) {
-    const isEnterprise = process.env.NOVU_ENTERPRISE === 'true' || process.env.CI_EE_TEST === 'true';
-    const isSelfHosted = process.env.IS_SELF_HOSTED === 'true';
-
-    if (!isEnterprise || isSelfHosted) {
-      return;
-    }
-
-    try {
-      const deleteTranslationGroup = this.moduleRef.get(require('@novu/ee-translation')?.DeleteTranslationGroup, {
-        strict: false,
-      });
-
-      await deleteTranslationGroup.execute({
-        resourceId: command.workflowIdOrInternalId,
-        resourceType: LocalizationResourceEnum.WORKFLOW,
-        organizationId: command.organizationId,
-        environmentId: command.environmentId,
-        userId: command.userId,
-        session,
-      });
-    } catch (error) {
-      this.logger.error(`Failed to delete translations for workflow`, {
-        workflowIdentifier: command.workflowIdOrInternalId,
-        organizationId: command.organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      // translation group might not be present, so we can ignore the error
     }
   }
 }

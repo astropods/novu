@@ -119,11 +119,6 @@ export class SyncToEnvironmentUseCase {
     );
     await Promise.all(layoutsToSyncPromises);
 
-    const layoutsTranslationGroupsPromises = layoutsToSync.map((layoutId) =>
-      this.publishTranslationGroup(layoutId, LocalizationResourceEnum.LAYOUT, command)
-    );
-    await Promise.all(layoutsTranslationGroupsPromises);
-
     const upsertedWorkflow = await this.upsertWorkflowUseCase.execute(
       UpsertWorkflowCommand.create({
         preserveWorkflowId: true,
@@ -135,8 +130,6 @@ export class SyncToEnvironmentUseCase {
     );
 
     await this.syncStepResolver(command, sourceWorkflow, upsertedWorkflow);
-
-    await this.publishTranslationGroup(sourceWorkflow.workflowId, LocalizationResourceEnum.WORKFLOW, command);
 
     // Update the source workflow with publish information
     await this.notificationTemplateRepository.updatePublishFields(
@@ -208,32 +201,6 @@ export class SyncToEnvironmentUseCase {
     );
   }
 
-  private async publishTranslationGroup(
-    resourceId: string,
-    resourceType: LocalizationResourceEnum,
-    command: SyncToEnvironmentCommand
-  ): Promise<void> {
-    const isEnterprise = process.env.NOVU_ENTERPRISE === 'true' || process.env.CI_EE_TEST === 'true';
-    const isSelfHosted = process.env.IS_SELF_HOSTED === 'true';
-
-    if (!isEnterprise || isSelfHosted) {
-      return;
-    }
-
-    const publishTranslationGroup = this.moduleRef.get(require('@novu/ee-translation')?.PublishTranslationGroup, {
-      strict: false,
-    });
-
-    const { user, targetEnvironmentId } = command;
-
-    await publishTranslationGroup.execute({
-      user,
-      resourceId,
-      resourceType,
-      sourceEnvironmentId: user.environmentId,
-      targetEnvironmentId,
-    });
-  }
 
   private isSyncable(workflow: WorkflowResponseDto): boolean {
     return SYNCABLE_WORKFLOW_ORIGINS.includes(workflow.origin);

@@ -64,55 +64,6 @@ export class DuplicateLayoutUseCase {
       duplicatedLayoutId: duplicatedLayout._id,
     });
 
-    if (duplicatedLayout.isTranslationEnabled) {
-      await this.duplicateTranslationsForLayout({
-        sourceResourceId: originalLayout.layoutId,
-        targetResourceId: duplicatedLayout.layoutId,
-        command,
-      });
-    }
-
     return duplicatedLayout;
-  }
-
-  private async duplicateTranslationsForLayout({
-    sourceResourceId,
-    targetResourceId,
-    command,
-  }: {
-    sourceResourceId: string;
-    targetResourceId: string;
-    command: DuplicateLayoutCommand;
-  }) {
-    const isEnterprise = process.env.NOVU_ENTERPRISE === 'true' || process.env.CI_EE_TEST === 'true';
-    const isSelfHosted = process.env.IS_SELF_HOSTED === 'true';
-
-    if (!isEnterprise || isSelfHosted) {
-      return;
-    }
-
-    try {
-      const duplicateLocales = this.moduleRef.get(require('@novu/ee-translation')?.DuplicateLocales, {
-        strict: false,
-      });
-
-      await duplicateLocales.execute({
-        sourceResourceId,
-        sourceResourceType: LocalizationResourceEnum.LAYOUT,
-        targetResourceId,
-        organizationId: command.organizationId,
-        environmentId: command.environmentId,
-        userId: command.userId,
-      });
-    } catch (error) {
-      this.logger.error(`Failed to duplicate translations for layout`, {
-        sourceResourceId,
-        targetResourceId,
-        organizationId: command.organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      throw error;
-    }
   }
 }

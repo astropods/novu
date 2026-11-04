@@ -48,8 +48,6 @@ export class DeleteLayoutUseCase {
       organizationId,
     });
 
-    await this.deleteTranslationGroup(layout, command);
-
     await this.layoutRepository.deleteLayout(layout._id!, environmentId, organizationId);
 
     await this.controlValuesRepository.delete({
@@ -84,39 +82,5 @@ export class DeleteLayoutUseCase {
       },
       { $unset: { 'controls.layoutId': '' } }
     );
-  }
-
-  private async deleteTranslationGroup(layout: LayoutResponseDto, command: DeleteLayoutCommand) {
-    const isEnterprise = process.env.NOVU_ENTERPRISE === 'true' || process.env.CI_EE_TEST === 'true';
-    const isSelfHosted = process.env.IS_SELF_HOSTED === 'true';
-
-    if (!isEnterprise || isSelfHosted) {
-      return;
-    }
-
-    try {
-      const deleteTranslationGroupUseCase = this.moduleRef.get(
-        require('@novu/ee-translation')?.DeleteTranslationGroup,
-        {
-          strict: false,
-        }
-      );
-
-      await deleteTranslationGroupUseCase.execute({
-        resourceId: layout.layoutId,
-        resourceType: LocalizationResourceEnum.LAYOUT,
-        organizationId: command.organizationId,
-        environmentId: command.environmentId,
-        userId: command.userId,
-      });
-    } catch (error) {
-      this.logger.error(`Failed to delete translations for layout`, {
-        layoutId: layout.layoutId,
-        organizationId: command.organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      // translation group might not be present, so we can ignore the error
-    }
   }
 }

@@ -148,19 +148,10 @@ export class EnrichOrganizationBrand {
         {
           $set: {
             brandEnrichment: enrichment,
-            onboardingWorkflowsStatus: 'pending' as OnboardingWorkflowsStatus,
+            onboardingWorkflowsStatus: 'skipped' as OnboardingWorkflowsStatus,
           },
         }
       );
-
-      const generationDispatched = await this.triggerWorkflowGeneration(command, brandData);
-
-      if (!generationDispatched) {
-        await this.organizationRepository.update(
-          { _id: command.user.organizationId },
-          { $set: { onboardingWorkflowsStatus: 'skipped' as OnboardingWorkflowsStatus } }
-        );
-      }
     } catch (error) {
       this.logger.error(error, 'Failed to enrich organization brand');
       captureException(error, {
@@ -188,65 +179,5 @@ export class EnrichOrganizationBrand {
     if (!cleaned || !cleaned.includes('.')) return null;
 
     return cleaned;
-  }
-
-  private async triggerWorkflowGeneration(
-    command: EnrichOrganizationBrandCommand,
-    brandData: BrandData
-  ): Promise<boolean> {
-    try {
-      const eeAi = require('@novu/ee-ai');
-      const { GenerateOnboardingWorkflowsUseCase } = eeAi;
-
-      if (!GenerateOnboardingWorkflowsUseCase) {
-        this.logger.warn('GenerateOnboardingWorkflowsUseCase not available, skipping workflow generation');
-
-        return false;
-      }
-
-      const usecase = this.moduleRef.get(GenerateOnboardingWorkflowsUseCase, { strict: false });
-      const generateCommand = eeAi.GenerateOnboardingWorkflowsCommand?.create({
-        user: command.user,
-        industry: brandData.industry ?? [],
-        companyTitle: brandData.companyTitle,
-        companyDescription: brandData.companyDescription,
-      });
-
-      if (!generateCommand) {
-        this.logger.warn('GenerateOnboardingWorkflowsCommand not available, skipping workflow generation');
-
-        return false;
-      }
-
-      usecase.execute(generateCommand).catch(async (error: unknown) => {
-        this.logger.error(error, 'Failed to generate onboarding workflows (fire-and-forget)');
-        captureException(error, {
-          tags: { feature: 'onboarding-workflows' },
-          extra: { organizationId: command.user.organizationId },
-        });
-
-        try {
-          await this.organizationRepository.update(
-            { _id: command.user.organizationId },
-            { $set: { onboardingWorkflowsStatus: 'skipped' as OnboardingWorkflowsStatus } }
-          );
-        } catch (updateError) {
-          this.logger.error(
-            updateError,
-            'Failed to update onboardingWorkflowsStatus to skipped after generation failure'
-          );
-          captureException(updateError, {
-            tags: { feature: 'onboarding-workflows' },
-            extra: { organizationId: command.user.organizationId },
-          });
-        }
-      });
-
-      return true;
-    } catch {
-      this.logger.warn('AI module not available, skipping workflow generation');
-
-      return false;
-    }
   }
 }

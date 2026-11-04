@@ -7,8 +7,6 @@ import { PromoteFeedChange } from '../promote-feed-change/promote-feed-change';
 import { PromoteLayoutChange } from '../promote-layout-change';
 import { PromoteMessageTemplateChange } from '../promote-message-template-change/promote-message-template-change';
 import { PromoteNotificationGroupChange } from '../promote-notification-group-change/promote-notification-group-change';
-import { PromoteTranslationChange } from '../promote-translation-change';
-import { PromoteTranslationGroupChange } from '../promote-translation-group-change';
 import { PromoteTypeChangeCommand } from '../promote-type-change.command';
 import { INotificationTemplateChangeService } from '../shared';
 import { PromoteChangeToEnvironmentCommand } from './promote-change-to-environment.command';
@@ -30,8 +28,6 @@ export class PromoteChangeToEnvironment {
     private promoteMessageTemplateChange: PromoteMessageTemplateChange,
     private promoteNotificationGroupChange: PromoteNotificationGroupChange,
     private promoteFeedChange: PromoteFeedChange,
-    private promoteTranslationChange: PromoteTranslationChange,
-    private promoteTranslationGroupChange: PromoteTranslationGroupChange,
     private logger: PinoLogger
   ) {
     this.logger.setContext(this.constructor.name);
@@ -76,12 +72,6 @@ export class PromoteChangeToEnvironment {
       case ChangeEntityTypeEnum.LAYOUT:
       case ChangeEntityTypeEnum.DEFAULT_LAYOUT:
         await this.promoteLayoutChange.execute(typeCommand);
-        break;
-      case ChangeEntityTypeEnum.TRANSLATION:
-        await this.promoteTranslationChange.execute(typeCommand);
-        break;
-      case ChangeEntityTypeEnum.TRANSLATION_GROUP:
-        await this.promoteTranslationGroupChange.execute(typeCommand);
         break;
       default:
         this.logger.error(
