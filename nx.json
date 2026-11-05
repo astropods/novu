@@ -61,8 +61,6 @@
           "@novu/framework",
           "@novu/js",
           "@novu/react",
-          "@novu/react-native",
-          "@novu/nextjs",
           "@novu/providers",
           "@novu/shared",
           "@novu/stateless"
