@@ -15,8 +15,6 @@ import { PromoteLayoutChange } from './promote-layout-change/promote-layout-chan
 import { PromoteMessageTemplateChange } from './promote-message-template-change/promote-message-template-change';
 import { PromoteNotificationGroupChange } from './promote-notification-group-change/promote-notification-group-change';
 import { PromoteNotificationTemplateChange } from './promote-notification-template-change/promote-notification-template-change.usecase';
-import { PromoteTranslationChange } from './promote-translation-change';
-import { PromoteTranslationGroupChange } from './promote-translation-group-change';
 
 export * from './apply-change';
 export * from './promote-change-to-environment';
@@ -35,8 +33,6 @@ export const USE_CASES = [
   BulkApplyChange,
   CountChanges,
   UpdateChange,
-  PromoteTranslationChange,
-  PromoteTranslationGroupChange,
   GetPreferences,
   UpsertPreferences,
   DeletePreferencesUseCase,

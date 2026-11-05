@@ -86,50 +86,11 @@ export class WorkflowComparator {
       // Compare steps and generate step-level diffs
       const stepDiffs = this.compareStepsAsEntities(sourceSteps, targetSteps);
 
-      // Get localization group diffs for this workflow only if translation is enabled
-      const localizationDiffs =
-        sourceWorkflow.isTranslationEnabled || targetWorkflow.isTranslationEnabled
-          ? await this.getLocalizationDiffs(sourceWorkflow, targetWorkflow, userContext._id)
-          : [];
-
-      return { workflowChanges, otherDiffs: [...stepDiffs, ...localizationDiffs] };
+      return { workflowChanges, otherDiffs: stepDiffs };
     } catch (error) {
       this.logger.error({ err: error }, `Failed to compare workflows ${error.message}`);
 
       return { workflowChanges: null, otherDiffs: [] };
-    }
-  }
-
-  @Instrument()
-  private async getLocalizationDiffs(
-    sourceWorkflow: NotificationTemplateEntity,
-    targetWorkflow: NotificationTemplateEntity,
-    userId: string
-  ): Promise<IResourceDiff[]> {
-    try {
-      // Use the new DiffTranslationGroups use case from the translation module
-      const diffTranslationGroups = this.moduleRef.get(require('@novu/ee-translation')?.DiffTranslationGroups, {
-        strict: false,
-      });
-
-      if (!diffTranslationGroups) {
-        this.logger.debug('Translation module not available, skipping localization diff');
-
-        return [];
-      }
-
-      return await diffTranslationGroups.execute({
-        sourceEnvironmentId: sourceWorkflow._environmentId,
-        targetEnvironmentId: targetWorkflow._environmentId,
-        resourceId: this.workflowRepositoryService.getWorkflowIdentifier(sourceWorkflow),
-        resourceType: LocalizationResourceEnum.WORKFLOW,
-        userId,
-        environmentId: sourceWorkflow._environmentId, // Required by EnvironmentWithUserCommand
-      });
-    } catch (error) {
-      this.logger.error(`Failed to diff localization groups for workflow ${sourceWorkflow.name}`, error);
-
-      return [];
     }
   }
 

@@ -13,8 +13,6 @@ import { GetOrganizationCommand } from '../../get-organization/get-organization.
 import { GetOrganization } from '../../get-organization/get-organization.usecase';
 import { SyncExternalOrganizationCommand } from './sync-external-organization.command';
 
-// TODO: eventually move to @novu/ee-auth
-
 /**
  * This logic is closely related to the CreateOrganization use case.
  * @see src/app/organization/usecases/create-organization/create-organization.usecase.ts
@@ -136,10 +134,6 @@ export class SyncExternalOrganization {
       })
     );
 
-    if (organizationAfterChanges) {
-      await this.createCustomer(command.email, organizationAfterChanges._id);
-    }
-
     const domain = organization.domain || this.extractDomainFromEmail(command.email);
     if (domain) {
       this.triggerBrandEnrichment(command.userId, organization._id, devEnv._id, domain).catch((error) =>
@@ -179,25 +173,6 @@ export class SyncExternalOrganization {
       });
     } catch (error) {
       this.logger.warn({ err: error }, `EnrichOrganizationBrand has failed for ${domain}, skipping`);
-    }
-  }
-
-  private async createCustomer(billingEmail: string, organizationId: string) {
-    try {
-      if (process.env.NOVU_ENTERPRISE === 'true' || process.env.CI_EE_TEST === 'true') {
-        if (!require('@novu/ee-billing')?.GetOrCreateCustomer) {
-          throw new BadRequestException('Billing module is not loaded');
-        }
-        const usecase = this.moduleRef.get(require('@novu/ee-billing')?.GetOrCreateCustomer, {
-          strict: false,
-        });
-        await usecase.execute({
-          organizationId,
-          billingEmail,
-        });
-      }
-    } catch (e) {
-      this.logger.error({ err: e }, `Unexpected error while importing enterprise modules`);
     }
   }
 }

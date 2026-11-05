@@ -57,14 +57,6 @@ export class DuplicateWorkflowUseCase {
       })
     );
 
-    if (duplicatedWorkflow.isTranslationEnabled) {
-      await this.duplicateTranslationsForWorkflow({
-        sourceResourceId: workflow.workflowId,
-        targetResourceId: duplicatedWorkflow.workflowId,
-        command,
-      });
-    }
-
     return duplicatedWorkflow;
   }
 
@@ -124,46 +116,5 @@ export class DuplicateWorkflowUseCase {
         $in: [PreferencesTypeEnum.WORKFLOW_RESOURCE, PreferencesTypeEnum.USER_WORKFLOW],
       },
     });
-  }
-
-  private async duplicateTranslationsForWorkflow({
-    sourceResourceId,
-    targetResourceId,
-    command,
-  }: {
-    sourceResourceId: string;
-    targetResourceId: string;
-    command: DuplicateWorkflowCommand;
-  }) {
-    const isEnterprise = process.env.NOVU_ENTERPRISE === 'true' || process.env.CI_EE_TEST === 'true';
-    const isSelfHosted = process.env.IS_SELF_HOSTED === 'true';
-
-    if (!isEnterprise || isSelfHosted) {
-      return;
-    }
-
-    try {
-      const duplicateLocales = this.moduleRef.get(require('@novu/ee-translation')?.DuplicateLocales, {
-        strict: false,
-      });
-
-      await duplicateLocales.execute({
-        sourceResourceId,
-        sourceResourceType: LocalizationResourceEnum.WORKFLOW,
-        targetResourceId,
-        organizationId: command.user.organizationId,
-        environmentId: command.user.environmentId,
-        userId: command.user._id,
-      });
-    } catch (error) {
-      this.logger.error(`Failed to duplicate translations for workflow`, {
-        sourceResourceId,
-        targetResourceId,
-        organizationId: command.user.organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      throw error;
-    }
   }
 }

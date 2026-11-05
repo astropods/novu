@@ -1,24 +1,10 @@
-import { Global, MiddlewareConsumer, Module, ModuleMetadata } from '@nestjs/common';
-import { isBetterAuthEnabled, isClerkEnabled } from '@novu/shared';
-import { configure as configureCommunity, getCommunityAuthModuleConfig } from './community.auth.module.config';
-import { configure as configureEE, getEEModuleConfig } from './ee.auth.module.config';
-
-function getModuleConfig(): ModuleMetadata {
-  if (isClerkEnabled() || isBetterAuthEnabled()) {
-    return getEEModuleConfig();
-  } else {
-    return getCommunityAuthModuleConfig();
-  }
-}
+import { Global, MiddlewareConsumer, Module } from '@nestjs/common';
+import { configure, getCommunityAuthModuleConfig } from './community.auth.module.config';
 
 @Global()
-@Module(getModuleConfig())
+@Module(getCommunityAuthModuleConfig())
 export class AuthModule {
   public configure(consumer: MiddlewareConsumer) {
-    if (isClerkEnabled() || isBetterAuthEnabled()) {
-      configureEE(consumer);
-    } else {
-      configureCommunity(consumer);
-    }
+    configure(consumer);
   }
 }

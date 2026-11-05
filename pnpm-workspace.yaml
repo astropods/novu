@@ -5,9 +5,6 @@ packages:
   - 'libs/*'
   # exclude packages that are inside test directories
   - '!**/test/**'
-  # all packages in enterprise modules
-  - 'enterprise/packages/*'
-  - 'enterprise/workers/step-resolver'
 
 # Pnpm configuration
 # Wait 3 days (4320 minutes) before allowing packages to be installed

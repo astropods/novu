@@ -121,7 +121,6 @@
     "zod-to-json-schema": "^3.23.3"
   },
   "optionalDependencies": {
-    "@novu/ee-shared-services": "workspace:*",
     "@taskforcesh/bullmq-pro": "6.11.0"
   },
   "devDependencies": {

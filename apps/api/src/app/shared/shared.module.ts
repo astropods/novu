@@ -63,32 +63,26 @@ import {
   UserRepository,
   WorkflowOverrideRepository,
 } from '@novu/dal';
-import { isClerkEnabled, JobTopicNameEnum } from '@novu/shared';
+import { JobTopicNameEnum } from '@novu/shared';
 import packageJson from '../../../package.json';
 
 function getDynamicAuthProviders() {
-  if (isClerkEnabled()) {
-    const eeAuthPackage = require('@novu/ee-auth');
+  const userRepositoryProvider = {
+    provide: 'USER_REPOSITORY',
+    useClass: CommunityUserRepository,
+  };
 
-    return eeAuthPackage.injectEEAuthProviders();
-  } else {
-    const userRepositoryProvider = {
-      provide: 'USER_REPOSITORY',
-      useClass: CommunityUserRepository,
-    };
+  const memberRepositoryProvider = {
+    provide: 'MEMBER_REPOSITORY',
+    useClass: CommunityMemberRepository,
+  };
 
-    const memberRepositoryProvider = {
-      provide: 'MEMBER_REPOSITORY',
-      useClass: CommunityMemberRepository,
-    };
+  const organizationRepositoryProvider = {
+    provide: 'ORGANIZATION_REPOSITORY',
+    useClass: CommunityOrganizationRepository,
+  };
 
-    const organizationRepositoryProvider = {
-      provide: 'ORGANIZATION_REPOSITORY',
-      useClass: CommunityOrganizationRepository,
-    };
-
-    return [userRepositoryProvider, memberRepositoryProvider, organizationRepositoryProvider];
-  }
+  return [userRepositoryProvider, memberRepositoryProvider, organizationRepositoryProvider];
 }
 
 const DAL_MODELS = [
